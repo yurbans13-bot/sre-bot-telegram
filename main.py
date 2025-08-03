@@ -6,15 +6,21 @@ import requests
 URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImR5bXZ2eGtuciswb3pJUzZ4cjVrT3c9PSIsInZhbHVlIjoiS1hPRU1Fc0QvaSs2TXNjVlYvWXhRUT09IiwibWFjIjoiMTAwZGUwMWUzOTBmZmQwMjVlYTg3MmE4Yjk2ODAzNzdmZjU3YWUzMjdjYmJmNmNkMWVkYWJhMmExMTRiMmQ3NSIsInRhZyI6IiJ9"
 TELEGRAM_BOT_TOKEN = "8101121299:AAG5M15XQjgLJX7zjQiPqqeiFgTTg_lVgoU"
 TELEGRAM_CHAT_ID = "243580570"
-CHECK_INTERVAL = 10  # интервал в секундах (30 минут)
+CHECK_INTERVAL = 10  # интервал в секундах
 
 # 📤 Отправка сообщений в Telegram
 def send_telegram(text):
     print("📬 Отправка в Telegram:", text)
-    requests.post(
-        f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
-        data={"chat_id": TELEGRAM_CHAT_ID, "text": text}
-    )
+    try:
+        response = requests.post(
+            f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
+            data={"chat_id": TELEGRAM_CHAT_ID, "text": text}
+        )
+        print("📨 Статус ответа Telegram:", response.status_code)
+        if not response.ok:
+            print("⚠️ Ошибка Telegram:", response.text)
+    except Exception as e:
+        print("❗ Ошибка при отправке Telegram:", e)
 
 # 🔍 Проверка доступных дат
 async def check_dates():
@@ -35,11 +41,13 @@ async def check_dates():
 
 # 🔁 Запуск в цикле
 async def loop():
+    print("🔄 Бот запущен")
+    await asyncio.sleep(3)  # небольшая пауза для логов
     while True:
         try:
             await check_dates()
         except Exception as e:
-            print("❗ Ошибка:", e)
+            print("❗ Ошибка при проверке:", e)
         await asyncio.sleep(CHECK_INTERVAL)
 
 # 🚀 Старт
