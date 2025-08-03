@@ -1,9 +1,0 @@
-services:
-  - type: web
-    name: sre-bot-telegram
-    env: python
-    plan: free
-    buildCommand: |
-      pip install -r requirements.txt
-      playwright install
-    startCommand: python main.py
