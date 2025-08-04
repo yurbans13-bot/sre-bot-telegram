@@ -30,15 +30,14 @@ async def check_dates():
             days = [await a.inner_text() for a in available]
             send_telegram(f"📅 Доступны даты: {', '.join(days)}\n👉 {URL}")
         else:
-            print("⏱ Нет доступных дат.")
-            send_telegram(f"❌ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — нет доступных дат.")
+            print(f"⏱ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — нет доступных дат.")
         await browser.close()
 
 async def loop():
     send_telegram(f"✅ Бот запущен: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     while True:
         try:
-            print("🔵 Проверка доступности...")
+            print(f"🔵 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — проверка доступности...")
             await check_dates()
         except Exception as e:
             print("❗ Ошибка:", e)
