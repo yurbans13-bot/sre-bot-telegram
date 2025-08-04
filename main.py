@@ -1,4 +1,3 @@
-
 import asyncio
 from playwright.async_api import async_playwright
 import requests
@@ -25,16 +24,23 @@ async def check_dates():
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
-        await page.goto(URL, timeout=60000)
-        await page.wait_for_timeout(7000)
-
-        available = await page.locator("td:has-text('Disponible')").all()
-        if available:
-            days = [await el.inner_text() for el in available]
-            send_telegram(f"📅 Доступны даты: {', '.join(days)}\n👉 {URL}")
-        else:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⏳ Нет доступных дат.")
-        await browser.close()
+        try:
+            await page.goto(URL, timeout=60000)
+            await page.wait_for_timeout(7000)
+            try:
+                available = await page.locator("td:has-text('Disponible')").all()
+            except Exception as e:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⚠️ Ошибка при поиске элементов: {e}")
+                available = []
+            if available:
+                days = [await el.inner_text() for el in available]
+                send_telegram(f"📅 Доступны даты: {', '.join(days)}\n👉 {URL}")
+            else:
+                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⏳ Нет доступных дат.")
+        except Exception as e:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка загрузки страницы: {e}")
+        finally:
+            await browser.close()
 
 async def loop():
     check_count = 0
@@ -42,13 +48,14 @@ async def loop():
         try:
             await check_dates()
         except Exception as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка: {e}")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка в check_dates(): {e}")
 
         check_count += 1
         if check_count % 36 == 0:
             send_telegram("✅ Бот работает. Healthcheck.")
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ Healthcheck отправлен.")
 
-        print(f"⏳ Ожидание {CHECK_INTERVAL} секунд...\n")
+        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⏳ Ожидание {CHECK_INTERVAL} секунд...\n")
         await asyncio.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
