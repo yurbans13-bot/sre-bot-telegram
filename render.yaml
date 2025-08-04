@@ -1,5 +1,0 @@
-services:
-  - type: web
-    name: sre-bot-telegram
-    env: docker
-    plan: free
