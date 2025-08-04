@@ -1,13 +1,13 @@
 import asyncio
 from playwright.async_api import async_playwright
 import requests
-from datetime import datetime
-
-# 🔧 Настройки
+import logging
 URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImR5bXZ2eGtuciswb3pJUzZ4cjVrT3c9PSIsInZhbHVlIjoiS1hPRU1Fc0QvaSs2TXNjVlYvWXhRUT09IiwibWFjIjoiMTAwZGUwMWUzOTBmZmQwMjVlYTg3MmE4Yjk2ODAzNzdmZjU3YWUzMjdjYmJmNmNkMWVkYWJhMmExMTRiMmQ3NSIsInRhZyI6IiJ9"
 TELEGRAM_BOT_TOKEN = "8101121299:AAEUKSZjhkMi6k8ccHh3PQ7xKGalW3t2b_s"
 TELEGRAM_CHAT_ID = "243580570"
 CHECK_INTERVAL = 600  # 10 минут
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s")
 
 def send_telegram(text):
     try:
@@ -15,47 +15,33 @@ def send_telegram(text):
             f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage",
             data={"chat_id": TELEGRAM_CHAT_ID, "text": text}
         )
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 📬 Telegram статус: {response.status_code}")
+        logging.info("📬 Отправлено в Telegram: %s", response.status_code)
     except Exception as e:
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка Telegram: {e}")
+        logging.error("Ошибка отправки в Telegram: %s", e)
 
 async def check_dates():
-    print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 🔍 Проверка доступности...")
+    logging.info("🔍 Проверка доступности...")
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
         try:
             await page.goto(URL, timeout=60000)
             await page.wait_for_timeout(7000)
-            try:
-                available = await page.locator("td:has-text('Disponible')").all()
-            except Exception as e:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⚠️ Ошибка при поиске элементов: {e}")
-                available = []
+            available = await page.locator("td:has-text('Disponible')").all()
             if available:
-                days = [await el.inner_text() for el in available]
+                days = [await a.inner_text() for a in available]
                 send_telegram(f"📅 Доступны даты: {', '.join(days)}\n👉 {URL}")
             else:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⏳ Нет доступных дат.")
+                logging.info("⏱ Нет доступных дат.")
         except Exception as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка загрузки страницы: {e}")
+            logging.error("⚠️ Ошибка Playwright: %s", e)
         finally:
             await browser.close()
 
 async def loop():
-    check_count = 0
     while True:
-        try:
-            await check_dates()
-        except Exception as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка в check_dates(): {e}")
-
-        check_count += 1
-        if check_count % 36 == 0:
-            send_telegram("✅ Бот работает. Healthcheck.")
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ✅ Healthcheck отправлен.")
-
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⏳ Ожидание {CHECK_INTERVAL} секунд...\n")
+        await check_dates()
+        logging.info("⏳ Ожидание %s секунд...", CHECK_INTERVAL)
         await asyncio.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
