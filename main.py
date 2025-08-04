@@ -3,9 +3,9 @@ from playwright.async_api import async_playwright
 import requests
 from datetime import datetime
 
-# 🔧 ТВОИ ДАННЫЕ:
+# 🔧 Настройки
 URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImR5bXZ2eGtuciswb3pJUzZ4cjVrT3c9PSIsInZhbHVlIjoiS1hPRU1Fc0QvaSs2TXNjVlYvWXhRUT09IiwibWFjIjoiMTAwZGUwMWUzOTBmZmQwMjVlYTg3MmE4Yjk2ODAzNzdmZjU3YWUzMjdjYmJmNmNkMWVkYWJhMmExMTRiMmQ3NSIsInRhZyI6IiJ9"
-TELEGRAM_BOT_TOKEN = "8101121299:AAG5M15XQjgLJX7zjQiPqqeiFgTTg_lVgoU"
+TELEGRAM_BOT_TOKEN = "8101121299:AAEUKSZjhkMi6k8ccHh3PQ7xKGalW3t2b_s"
 TELEGRAM_CHAT_ID = "243580570"
 CHECK_INTERVAL = 600  # 10 минут
 
@@ -16,9 +16,10 @@ def send_telegram(text):
             data={"chat_id": TELEGRAM_CHAT_ID, "text": text}
         )
     except Exception as e:
-        print("❗ Ошибка при отправке Telegram:", e)
+        print("Ошибка при отправке Telegram:", e)
 
 async def check_dates():
+    print(f"🔵 {datetime.now():%Y-%m-%d %H:%M:%S} | 🔍 Проверка доступности...")
     async with async_playwright() as p:
         browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
@@ -28,20 +29,19 @@ async def check_dates():
         available = await page.locator("td:has-text('Disponible')").all()
         if available:
             days = [await a.inner_text() for a in available]
-            send_telegram(f"📅 Доступны даты: {', '.join(days)}\n👉 {URL}")
+            message = f"📅 Доступны даты: {', '.join(days)}\n👉 {URL}"
+            print(f"✅ {datetime.now():%Y-%m-%d %H:%M:%S} | Даты найдены!")
+            send_telegram(message)
         else:
-            print(f"⏱ {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — нет доступных дат.")
+            print(f"⏱ {datetime.now():%Y-%m-%d %H:%M:%S} | Нет доступных дат.")
         await browser.close()
 
 async def loop():
-    send_telegram(f"✅ Бот запущен: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     while True:
         try:
-            print(f"🔵 {datetime.now().strftime('%Y-%m-%d %H:%M:%S')} — проверка доступности...")
             await check_dates()
         except Exception as e:
             print("❗ Ошибка:", e)
-            send_telegram(f"❗ Ошибка: {e}")
         print(f"⏳ Ожидание {CHECK_INTERVAL} секунд...\n")
         await asyncio.sleep(CHECK_INTERVAL)
 
