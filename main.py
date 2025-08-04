@@ -6,7 +6,7 @@ import logging
 URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImR5bXZ2eGtuciswb3pJUzZ4cjVrT3c9PSIsInZhbHVlIjoiS1hPRU1Fc0QvaSs2TXNjVlYvWXhRUT09IiwibWFjIjoiMTAwZGUwMWUzOTBmZmQwMjVlYTg3MmE4Yjk2ODAzNzdmZjU3YWUzMjdjYmJmNmNkMWVkYWJhMmExMTRiMmQ3NSIsInRhZyI6IiJ9"
 TELEGRAM_BOT_TOKEN = "8101121299:AAEUKSZjhkMi6k8ccHh3PQ7xKGalW3t2b_s"
 TELEGRAM_CHAT_ID = "243580570"
-CHECK_INTERVAL = 1200  # 20 минут
+CHECK_INTERVAL = 600  # 10 минут
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(message)s")
 
