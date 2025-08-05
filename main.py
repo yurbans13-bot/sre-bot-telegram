@@ -12,8 +12,7 @@ import os
 sys.stdout.reconfigure(line_buffering=True)
 
 # 🔧 Настройки
-URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImR5bXZ2eGtuciswb3pJUzZ4cjVrT3c9PSIsInZhbHVlIjoiS1hPRU1Fc0QvaSs2TXNjVlYvWXhRUT09IiwibWFjIjoiMTAwZGUwMWUzOTBmZmQwMjVlYTg3MmE4Yjk2ODAzNzdmZjU3YWUzMjdjYmJmNmNkMWVkYWJhMmExMTRiMmQ3NSIsInRhZyI6IiJ9"
-BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
+URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImZjeWpVNEdHNUdTZThUUysyV1VWV0E9PSIsInZhbHVlIjoiQ2t6N3hoZGdIK1Vra1U1cWg5MEt0dz09IiwibWFjIjoiODg1NDllODcyNDc4Y2RmMjZjZmYwYjRiZjQ3NGViMGRjMzViOGZlODEyYThjMDEwMTljZTIzMmRlMjVjNGQyZiIsInRhZyI6IiJ9"
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 CHECK_INTERVAL = 600  # 10 минут
 WEBHOOK_TOKEN = "my_webhook_token"  # для адреса: /webhook/my_webhook_token
