@@ -2,11 +2,6 @@ import asyncio
 from playwright.async_api import async_playwright
 import requests
 from datetime import datetime
-import sys
-import traceback
-
-# 💬 Убедимся, что всё сразу видно в логах Render
-sys.stdout.reconfigure(line_buffering=True)
 
 # 🔧 Настройки
 URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImR5bXZ2eGtuciswb3pJUzZ4cjVrT3c9PSIsInZhbHVlIjoiS1hPRU1Fc0QvaSs2TXNjVlYvWXhRUT09IiwibWFjIjoiMTAwZGUwMWUzOTBmZmQwMjVlYTg3MmE4Yjk2ODAzNzdmZjU3YWUzMjdjYmJmNmNkMWVkYWJhMmExMTRiMmQ3NSIsInRhZyI6IiJ9"
@@ -27,23 +22,18 @@ def send_telegram(text):
 async def check_dates():
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 🔍 Проверка доступности...")
     async with async_playwright() as p:
-        browser = await p.chromium.launch(headless=True, args=["--no-sandbox"])
+        browser = await p.chromium.launch(headless=True)
         page = await browser.new_page()
-        try:
-            await page.goto(URL, timeout=60000)
-            await page.wait_for_timeout(7000)
+        await page.goto(URL, timeout=60000)
+        await page.wait_for_timeout(7000)
 
-            available = await page.query_selector_all("td:has-text('Disponible')")
-            if available:
-                days = [await el.inner_text() for el in available]
-                send_telegram(f"📅 Доступны даты: {', '.join(days)}\n👉 {URL}")
-            else:
-                print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⏳ Нет доступных дат.")
-        except Exception as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⚠️ Ошибка Playwright: {e}")
-            traceback.print_exc()
-        finally:
-            await browser.close()
+        available = await page.locator("td:has-text('Disponible')").all()
+        if available:
+            days = [await el.inner_text() for el in available]
+            send_telegram(f"📅 Доступны даты: {', '.join(days)}\n👉 {URL}")
+        else:
+            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⏳ Нет доступных дат.")
+        await browser.close()
 
 async def loop():
     check_count = 0
@@ -51,14 +41,15 @@ async def loop():
         try:
             await check_dates()
         except Exception as e:
-            print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка во внешнем цикле: {e}")
-            traceback.print_exc()
+            err_msg = f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка: {e}"
+            print(err_msg)
+            send_telegram(f"❌ Ошибка в боте: {e}")
 
         check_count += 1
-        if check_count % 36 == 0:
+        if check_count % 36 == 0:  # каждые 6 часов (600 сек * 36)
             send_telegram("✅ Бот работает. Healthcheck.")
 
-        print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⏳ Ожидание {CHECK_INTERVAL} секунд...\n")
+        print(f"⏳ Ожидание {CHECK_INTERVAL} секунд...\n")
         await asyncio.sleep(CHECK_INTERVAL)
 
 if __name__ == "__main__":
