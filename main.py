@@ -10,7 +10,7 @@ import os
 sys.stdout.reconfigure(line_buffering=True)
 
 # 🔧 Настройки
-URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6Im...твоя_ссылка..."  # ← поставь свою
+URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImZjeWpVNEdHNUdTZThUUysyV1VWV0E9PSIsInZhbHVlIjoiQ2t6N3hoZGdIK1Vra1U1cWg5MEt0dz09IiwibWFjIjoiODg1NDllODcyNDc4Y2RmMjZjZmYwYjRiZjQ3NGViMGRjMzViOGZlODEyYThjMDEwMTljZTIzMmRlMjVjNGQyZiIsInRhZyI6IiJ9"
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 CHECK_INTERVAL = 600  # 10 минут
