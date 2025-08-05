@@ -1,25 +1,21 @@
 import asyncio
-from fastapi import FastAPI, Request
 from playwright.async_api import async_playwright
 import requests
 from datetime import datetime
 import sys
 import traceback
-import uvicorn
 import os
 
-# 💬 Логгирование
+# 💬 Логируем всё в реальном времени
 sys.stdout.reconfigure(line_buffering=True)
 
 # 🔧 Настройки
-URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImZjeWpVNEdHNUdTZThUUysyV1VWV0E9PSIsInZhbHVlIjoiQ2t6N3hoZGdIK1Vra1U1cWg5MEt0dz09IiwibWFjIjoiODg1NDllODcyNDc4Y2RmMjZjZmYwYjRiZjQ3NGViMGRjMzViOGZlODEyYThjMDEwMTljZTIzMmRlMjVjNGQyZiIsInRhZyI6IiJ9"
+URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6Im...твоя_ссылка..."  # ← поставь свою
+BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 CHECK_INTERVAL = 600  # 10 минут
-WEBHOOK_TOKEN = "my_webhook_token"  # для адреса: /webhook/my_webhook_token
+WEBHOOK_TOKEN = "my_webhook_token"  # опционально
 
-app = FastAPI()
-
-# Отправка в Telegram
 def send_telegram(text):
     try:
         response = requests.post(
@@ -30,7 +26,6 @@ def send_telegram(text):
     except Exception as e:
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка Telegram: {e}")
 
-# Основная проверка
 async def check_dates():
     print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] 🔍 Проверка доступности...")
     async with async_playwright() as p:
@@ -39,6 +34,7 @@ async def check_dates():
         try:
             await page.goto(URL, timeout=60000)
             await page.wait_for_timeout(7000)
+
             available = await page.query_selector_all("td:has-text('Disponible')")
             if available:
                 days = [await el.inner_text() for el in available]
@@ -48,10 +44,10 @@ async def check_dates():
         except Exception as e:
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⚠️ Ошибка Playwright: {e}")
             traceback.print_exc()
+            send_telegram(f"❗ Ошибка во время проверки: {e}")
         finally:
             await browser.close()
 
-# Циклический запуск
 async def loop():
     check_count = 0
     while True:
@@ -60,28 +56,14 @@ async def loop():
         except Exception as e:
             print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ❗ Ошибка во внешнем цикле: {e}")
             traceback.print_exc()
+            send_telegram(f"❗ Ошибка во внешнем цикле: {e}")
 
         check_count += 1
-        if check_count % 36 == 0:
+        if check_count % 36 == 0:  # каждые 6 часов при CHECK_INTERVAL=600
             send_telegram("✅ Бот работает. Healthcheck.")
 
         print(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] ⏳ Ожидание {CHECK_INTERVAL} секунд...\n")
         await asyncio.sleep(CHECK_INTERVAL)
 
-# Webhook маршрут
-@app.post(f"/webhook/{WEBHOOK_TOKEN}")
-async def webhook_handler(request: Request):
-    data = await request.json()
-    if "message" in data and "text" in data["message"]:
-        text = data["message"]["text"].strip()
-        if text == "/check":
-            send_telegram("✅ Бот работает. Healthcheck.")
-    return {"ok": True}
-
-# Запуск фоновой задачи
-@app.on_event("startup")
-async def start_background_tasks():
-    asyncio.create_task(loop())
-
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=10000)
+    asyncio.run(loop())
