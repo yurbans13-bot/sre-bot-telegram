@@ -12,7 +12,7 @@ import uvicorn
 sys.stdout.reconfigure(line_buffering=True)
 
 # 🔧 Настройки
-URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImR5bXZ2eGtuciswb3pJUzZ4cjVrT3c9PSIsInZhbHVlIjoiS1hPRU1Fc0QvaSs2TXNjVlYvWXhRUT09IiwibWFjIjoiMTAwZGUwMWUzOTBmZmQwMjVlYTg3MmE4Yjk2ODAzNzdmZjU3YWUzMjdjYmJmNmNkMWVkYWJhMmExMTRiMmQ3NSIsInRhZyI6IiJ9"
+URL = "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6IkhFQmdyMUFlODZFZ05mRkIwb2c5eWc9PSIsInZhbHVlIjoicWZLbUZoNlNTZFR4bVNocWdjZCsrQT09IiwibWFjIjoiZjlhOTFmZjk4OGI2ZjkzMzM1ZTBlN2I4YWMzNGI3ZWE1MTUwNTRmN2ZmZWYwZjI2OWRkODYyNWZkMDE3ZGIyZCIsInRhZyI6IiJ9"
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 CHECK_INTERVAL = 600  # 10 минут
