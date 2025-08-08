@@ -14,7 +14,7 @@ sys.stdout.reconfigure(line_buffering=True)
 
 # ─── Настройки ─────────────────────────────────────────────────────────────────
 URL = os.environ.get("TARGET_URL") or (
-    "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImZjeWpVNEdHNUdTZThUUysyV1VWV0E9PSIsInZhbHVlIjoiQ2t6N3hoZGdIK1Vra1U1cWg5MEt0dz09IiwibWFjIjoiODg1NDllODcyNDc4Y2RmMjZjZmYwYjRiZjQ3NGViMGRjMzViOGZlODEyYThjMDEwMTljZTIzMmRlMjVjNGQyZiIsInRhZyI6IiJ9"
+    "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6IkhFQmdyMUFlODZFZ05mRkIwb2c5eWc9PSIsInZhbHVlIjoicWZLbUZoNlNTZFR4bVNocWdjZCsrQT09IiwibWFjIjoiZjlhOTFmZjk4OGI2ZjkzMzM1ZTBlN2I4YWMzNGI3ZWE1MTUwNTRmN2ZmZWYwZjI2OWRkODYyNWZkMDE3ZGIyZCIsInRhZyI6IiJ9"
 )
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
