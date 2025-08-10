@@ -19,7 +19,7 @@ URL = os.environ.get("TARGET_URL") or (
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
-CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", "3600"))  # сек, по умолчанию 60 мин
+CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", "1800"))  # сек, по умолчанию 30 мин
 WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "my_webhook_token").strip()  # /webhook/<token>
 
 if not BOT_TOKEN:
