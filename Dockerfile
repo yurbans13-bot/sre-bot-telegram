@@ -15,14 +15,14 @@ RUN apt-get update && apt-get install -y \
 # Указываем рабочую директорию
 WORKDIR /app
 
-# Копируем файлы
+# Копируем файлы проекта
 COPY . .
 
-# Установка зависимостей
+# Обновляем pip и ставим зависимости
 RUN pip install --upgrade pip
 RUN pip install -r requirements.txt
 
-# Устанавливаем браузеры Playwright
+# Устанавливаем браузеры Playwright (все вместе)
 RUN python -m playwright install --with-deps
 
 # Указываем публичный порт
