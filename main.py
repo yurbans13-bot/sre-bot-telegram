@@ -14,13 +14,21 @@ sys.stdout.reconfigure(line_buffering=True)
 
 # ─── Настройки ─────────────────────────────────────────────────────────────────
 URL = os.environ.get("TARGET_URL") or (
-    "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImZOWld4T0VuVWEyYTQ5a1JxV3VQeUE9PSIsInZhbHVlIjoiWmRiTlgyTGFweXRIVTZsaHVQS2lmUT09IiwibWFjIjoiNzk1NTc0NDFmZjVjMDc0YjYxODhlNTdhYTUzNzdlMDViYTQyMDI1Nzg0MTBhNjIwYjY0OWEyNTUzY2UyN2I3NyIsInRhZyI6IiJ9"   
+    "https://reipv6.sre.gob.mx/sinna/registro/citas/eyJpdiI6ImZOWld4T0VuVWEyYTQ5a1JxV3VQeUE9PSIsInZhbHVlIjoiWmRiTlgyTGFweXRIVTZsaHVQS2lmUT09IiwibWFjIjoiNzk1NTc0NDFmZjVjMDc0YjYxODhlNTdhYTUzNzdlMDViYTQyMDI1Nzg0MTBhNjIwYjY0OWEyNTUzY2UyN2I3NyIsInRhZyI6IiJ9"
 )
 
 BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
-CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", "1800"))  # сек, по умолчанию 30 мин
-WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "my_webhook_token").strip()  # /webhook/<token>
+
+# Как часто проверяем сайт (секунды)
+CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", "1800"))  # по умолчанию 30 мин
+
+# Вебхук Telegram: /webhook/<token>
+WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "my_webhook_token").strip()
+
+# Авто-healthcheck (по умолчанию выключен)
+AUTO_HEALTHCHECK = os.environ.get("AUTO_HEALTHCHECK", "0") == "1"
+HEALTHCHECK_INTERVAL = int(os.environ.get("HEALTHCHECK_INTERVAL", str(6 * 3600)))  # 6 часов
 
 if not BOT_TOKEN:
     print("⚠️  ВНИМАНИЕ: TELEGRAM_BOT_TOKEN не задан в переменных окружения!")
@@ -84,29 +92,37 @@ async def check_dates():
             await browser.close()
 
 
-# ─── Фоновый цикл ──────────────────────────────────────────────────────────────
-async def loop():
-    check_count = 0
+# ─── Фоновые циклы ─────────────────────────────────────────────────────────────
+async def check_loop():
+    """Периодическая проверка сайта (рассылает ДАТЫ при появлении)."""
     while True:
         try:
             await check_dates()
         except Exception as e:
             print(
                 f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
-                f"❗ Ошибка во внешнем цикле: {e}"
+                f"❗ Ошибка во внешнем цикле check_loop: {e}"
             )
             traceback.print_exc()
-
-        check_count += 1
-        # Пример: раз в 6 часов (36 * 10 мин) отправим healthcheck
-        if check_count % max(1, 6 * 60 // (CHECK_INTERVAL // 60 or 1)) == 0:
-            send_telegram("✅ Бот работает. Healthcheck.")
 
         print(
             f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
             f"⏳ Ожидание {CHECK_INTERVAL} секунд...\n"
         )
         await asyncio.sleep(CHECK_INTERVAL)
+
+
+async def healthcheck_loop():
+    """(Опционально) авто-сообщение «бот жив» — запускается только если включено через ENV."""
+    while True:
+        try:
+            send_telegram("✅ Бот работает. Healthcheck.")
+        except Exception as e:
+            print(
+                f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] "
+                f"❗ Ошибка healthcheck_loop: {e}"
+            )
+        await asyncio.sleep(HEALTHCHECK_INTERVAL)
 
 
 # ─── Вебхуки Telegram ──────────────────────────────────────────────────────────
@@ -156,8 +172,21 @@ async def root():
 
 @app.on_event("startup")
 async def start_background_tasks():
-    # Запускаем фоновую проверку
-    asyncio.create_task(loop())
+    # Запускаем задачи и держим ссылки, чтобы можно было корректно остановить
+    app.state.tasks = []
+    app.state.tasks.append(asyncio.create_task(check_loop()))
+    if AUTO_HEALTHCHECK:
+        app.state.tasks.append(asyncio.create_task(healthcheck_loop()))
+
+
+@app.on_event("shutdown")
+async def stop_background_tasks():
+    # Корректно отменяем фоновые задачи
+    for t in getattr(app.state, "tasks", []):
+        try:
+            t.cancel()
+        except Exception:
+            pass
 
 
 if __name__ == "__main__":
