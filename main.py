@@ -21,7 +21,7 @@ BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
 CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
 
 # Как часто проверяем сайт (секунды)
-CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", "600"))  # по умолчанию 10 мин
+CHECK_INTERVAL = int(os.environ.get("CHECK_INTERVAL", "300"))  # по умолчанию 5 мин
 
 # Вебхук Telegram: /webhook/<token>
 WEBHOOK_TOKEN = os.environ.get("WEBHOOK_TOKEN", "my_webhook_token").strip()
